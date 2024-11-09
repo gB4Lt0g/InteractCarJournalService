@@ -1,0 +1,138 @@
+@page "/admin/bodytypes"
+@attribute [Authorize(Roles = "admin")]
+
+@inject IGenericService<BodyType> _bodyTypesService
+
+@if(_isCreating)
+{
+    <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Class="mb-4" OnClick="@CloseCreateMenu">Back</MudButton>
+
+    <MudTextField @bind-Value="Name" Label="Name" Variant="Variant.Outlined" />
+
+    <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Class="mb-4" OnClick="@CreateEngine">Create</MudButton>
+
+    <MudText Color="Color.Error">
+        @ErrorMessage
+    </MudText>
+}
+else
+{
+    <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Class="mb-4" OnClick="@OpenCreateMenu">Add new Body Type</MudButton>
+
+    <MudDataGrid
+        T="BodyType"
+        Items="@_bodyTypes"
+        Bordered="true"
+        Dense="true"
+        SortMode="@SortMode.Single"
+        ReadOnly="@_readOnly"
+        EditMode="@(_isCellEditMode ? DataGridEditMode.Cell : DataGridEditMode.Form)"
+        StartedEditingItem="@StartedEditingItem"
+        CanceledEditingItem="@CanceledEditingItem"
+        CommittedItemChanges="@CommittedItemChanges"
+        EditTrigger="@(_editTriggerRowClick ? DataGridEditTrigger.OnRowClick : DataGridEditTrigger.Manual)">
+
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Body Types</MudText>
+            <MudSpacer />
+            <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
+
+        <Columns>
+            <PropertyColumn Property="x => x.Id" Title="#" Editable="false" HeaderStyle="width: 5%;" />
+            <PropertyColumn Property="x => x.Name" Title="Model" FlexGrow="1" />
+            <TemplateColumn CellClass="d-flex justify-end" HeaderStyle="width: 5%;">
+                <CellTemplate>
+                    <MudStack Row>
+                        <MudIconButton Icon="@Icons.Material.Outlined.Edit"
+                            OnClick="@context.Actions.StartEditingItemAsync" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteRecord(@context.Item))" aria-label="delete" />
+                    </MudStack>
+                </CellTemplate>
+            </TemplateColumn>
+
+        </Columns>
+        <PagerContent>
+            <MudDataGridPager T="BodyType" />
+        </PagerContent>
+    </MudDataGrid>
+}
+
+@code {
+    private MudDataGrid<BodyType> _dataGrid = new MudDataGrid<BodyType>();
+
+    private List<BodyType> _bodyTypes = new List<BodyType>();
+    // creating
+    private bool _isCreating = false;
+    private string Name { get; set; } = string.Empty;
+
+    private string ErrorMessage { get; set; } = string.Empty;
+
+    private async Task CreateEngine()
+    {
+        if(string.IsNullOrEmpty(Name) ||
+            Name.Length < 3)
+        {
+            ErrorMessage = "Must be 3 or more characters";
+            StateHasChanged();
+            return;
+        }
+
+        await _bodyTypesService.AddAsync(new BodyType(0, Name));
+        _bodyTypes = (await _bodyTypesService.GetAllAsync()).ToList();
+
+        _isCreating = false;
+    }
+
+    // editing
+    private bool _readOnly;
+    private bool _isCellEditMode;
+    private List<string> _events = new();
+    private bool _editTriggerRowClick;
+    private string TextValue { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _bodyTypes = (await _bodyTypesService.GetAllAsync()).ToList();
+    }
+
+    void StartedEditingItem(BodyType item)
+    {
+        _events.Insert(0, $"Event = StartedEditingItem, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
+    }
+
+    void CanceledEditingItem(BodyType item)
+    {
+        _events.Insert(0, $"Event = CanceledEditingItem, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
+    }
+
+    async Task CommittedItemChanges(BodyType item)
+    {
+        _events.Insert(0, $"Event = CommittedItemChanges, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
+        await _bodyTypesService.UpdateAsync(item);
+    }
+
+    private Task OnSearch(string text)
+    {
+        TextValue = text;
+        return _dataGrid.ReloadServerData();
+    }
+
+    private void OpenCreateMenu()
+    {
+        _isCreating = true;
+    }
+
+    private void CloseCreateMenu()
+    {
+        _isCreating = false;
+    }
+
+    private void DeleteRecord(BodyType record)
+    {
+        _bodyTypesService.DeleteAsync(record.Id);
+        _bodyTypes.Remove(record);
+        StateHasChanged();
+    }
+}

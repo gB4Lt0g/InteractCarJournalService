@@ -1,0 +1,49 @@
+@attribute [Authorize(Roles = "user")]
+
+@using CarJournal.Services.Authentication
+@using CarJournal.Services.Client
+@using CarJournal.Services.UserCars
+
+@inject IUserCarsService _userCarService
+@inject IClientAuthenticationService _authenticationService
+@inject ISelectedCarService _selectedCarService
+@inject NavigationManager _navigationManager
+
+@if(_isLoaded)
+{
+
+<MudAutocomplete T="UserCar" Label="Select Car" ToStringFunc="@(e=> e==null?null : $"{e.Name}")"
+                        Style="max-width: 300px;"
+                        SearchFunc="@ViewModel.SearchCar"
+                        Value="@ViewModel.SelectedCar"
+                        ValueChanged="@ViewModel.OnSelectedCarChanged"
+                        Strict="false">
+</MudAutocomplete>
+
+}
+else
+{
+    <p>@ViewModel.ErrorMessage</p>
+}
+@code {
+    private SelectedCarViewModel ViewModel { get; set; }
+
+    private bool _isLoaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ViewModel = new SelectedCarViewModel(
+            _userCarService,
+            _authenticationService,
+            _selectedCarService,
+            _navigationManager
+        );
+
+        await ViewModel.LoadUserCarsAsync();
+
+        if(string.IsNullOrEmpty(ViewModel.ErrorMessage))
+            _isLoaded = true;
+
+        StateHasChanged();
+    }
+}

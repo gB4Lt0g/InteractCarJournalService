@@ -1,0 +1,262 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+<Font Name="Times New Roman" Size="14"/>
+  <Class Name="CarJournal.Pages.UserPages.ServicesPages.ServiceRecordsListViewModel">
+    <Position X="17.25" Y="12.25" Width="2.75" />
+    <Members>
+      <Field Name="_navigationManager" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Properties" Collapsed="true" />
+    </Compartments>
+    <AssociationLine Name="_selectedCarService" Type="CarJournal.Services.Client.ISelectedCarService" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="18.625" Y="14.878" />
+        <Point X="18.625" Y="17.75" />
+        <Point X="23.75" Y="17.75" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="_serviceRecordService" Type="CarJournal.Services.ServiceRecords.IServiceRecordService">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.032" Y="1.011" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>EAAAQAAAAAAEAAEAAAAAAAoAAAAAAAABAIAECAAABAA=</HashCode>
+      <FileName>Pages\UserPages\ServicesPages\ServiceRecordsListViewModel.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_selectedCarService" />
+      <Field Name="_serviceRecordService" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="CarJournal.Pages.UserPages.MileagePages.MileageViewModel">
+    <Position X="29.75" Y="10.75" Width="2" />
+    <AssociationLine Name="_selectedCarService" Type="CarJournal.Services.Client.ISelectedCarService" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="30.781" Y="13.378" />
+        <Point X="30.781" Y="16.875" />
+        <Point X="25.75" Y="16.875" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="_mileageService" Type="CarJournal.Services.Mileages.IMileageService" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="29.75" Y="11.896" />
+        <Point X="28.375" Y="11.896" />
+        <Point X="28.375" Y="11.105" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="_trackingService" Type="CarJournal.Services.Trackings.ITrackingService" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="29.75" Y="12.091" />
+        <Point X="27.812" Y="12.091" />
+        <Point X="27.812" Y="12.75" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="_userCarsService" Type="CarJournal.Services.UserCars.IUserCarsService" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="30.75" Y="10.75" />
+        <Point X="30.75" Y="10.375" />
+        <Point X="33.417" Y="10.375" Type="JumpStart" />
+        <Point X="33.583" Y="10.375" Type="JumpEnd" />
+        <Point X="34.812" Y="10.375" />
+        <Point X="34.812" Y="6.605" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>BAQAQAAIAAQAAAAgAAAAAAACAABAAAABAAAAAAAAgAA=</HashCode>
+      <FileName>Pages\UserPages\MileagePages\MileageViewModel.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_selectedCarService" />
+      <Field Name="_mileageService" />
+      <Field Name="_trackingService" />
+      <Field Name="_userCarsService" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="CarJournal.Pages.UserPages.TrackingPages.TrackingListViewModel">
+    <Position X="23.25" Y="11.25" Width="2.75" />
+    <Members>
+      <Field Name="_navigationManager" Hidden="true" />
+    </Members>
+    <AssociationLine Name="_selectedCarService" Type="CarJournal.Services.Client.ISelectedCarService" ManuallyRouted="true" FixedToPoint="true">
+      <Path>
+        <Point X="24.625" Y="14.08" />
+        <Point X="24.625" Y="16.5" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="_mileageService" Type="CarJournal.Services.Mileages.IMileageService" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="25.547" Y="11.25" />
+        <Point X="25.547" Y="9.5" />
+        <Point X="27" Y="9.5" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="_trackingService" Type="CarJournal.Services.Trackings.ITrackingService" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="26" Y="12.665" />
+        <Point X="26.24" Y="12.665" />
+        <Point X="26.24" Y="14.25" />
+        <Point X="26.5" Y="14.25" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.082" Y="-0.37" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>QAAAQAAAAAAAAQAAAAAAAAgAAQBAAAABAIAAICAAAAA=</HashCode>
+      <FileName>Pages\UserPages\TrackingPages\TrackingListViewModel.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_serviceRecordService" />
+      <Field Name="_selectedCarService" />
+      <Field Name="_mileageService" />
+      <Field Name="_trackingService" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="CarJournal.Pages.UserPages.TrackingPages.CreateTrackingViewModel">
+    <Position X="32.25" Y="11" Width="2.5" />
+    <Members>
+      <Field Name="_navigationManager" Hidden="true" />
+    </Members>
+    <AssociationLine Name="_selectedCarService" Type="CarJournal.Services.Client.ISelectedCarService" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="33.5" Y="13.628" />
+        <Point X="33.5" Y="17.5" />
+        <Point X="25.75" Y="17.5" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="_trackingService" Type="CarJournal.Services.Trackings.ITrackingService" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="32.844" Y="13.628" />
+        <Point X="32.844" Y="14.188" />
+        <Point X="30.865" Y="14.188" Type="JumpStart" />
+        <Point X="30.698" Y="14.188" Type="JumpEnd" />
+        <Point X="29.25" Y="14.188" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="_userCarsService" Type="CarJournal.Services.UserCars.IUserCarsService" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="34.75" Y="11.625" />
+        <Point X="36.375" Y="11.625" />
+        <Point X="36.375" Y="6.605" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>EAQAQAAAAAAEAAAQACAAAAgAAABAAAABAAABAAAAgAA=</HashCode>
+      <FileName>Pages\UserPages\TrackingPages\CreateTrackingViewModel.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_selectedCarService" />
+      <Field Name="_mileageService" />
+      <Field Name="_trackingService" />
+      <Field Name="_userCarsService" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="CarJournal.Pages.UserPages.ServicesPages.CreateServiceRecordViewModel">
+    <Position X="20.25" Y="11.75" Width="2.75" />
+    <Members>
+      <Field Name="_navigationManger" Hidden="true" />
+    </Members>
+    <AssociationLine Name="_serviceRecordService" Type="CarJournal.Services.ServiceRecords.IServiceRecordService">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="-0.375" Y="1.276" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <AssociationLine Name="_selectedCarService" Type="CarJournal.Services.Client.ISelectedCarService" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="21.625" Y="14.378" />
+        <Point X="21.625" Y="17.438" />
+        <Point X="23.75" Y="17.438" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="_serviceCategoryService" Type="CarJournal.Services.ServiceCategories.IServiceCategoryService">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="-1.941" Y="0.157" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>EAAAQCgAAAAUAAAAQAAAAAIAAAAAAAABAIAAAAAAAAA=</HashCode>
+      <FileName>Pages\UserPages\ServicesPages\CreateServiceRecordViewModel.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_serviceRecordService" />
+      <Field Name="_selectedCarService" />
+      <Field Name="_serviceCategoryService" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="CarJournal.Pages.UserPages.CarPages.Garage.UserGarageViewModel">
+    <Position X="38.5" Y="4.25" Width="2.25" />
+    <Members>
+      <Field Name="_authenticationService" Hidden="true" />
+      <Field Name="_navigationManager" Hidden="true" />
+    </Members>
+    <TypeIdentifier>
+      <HashCode>AEQAAAAABIAAAAAAAAAQAAgAAAAAAABBAAgAAAAAAAA=</HashCode>
+      <FileName>Pages\UserPages\CarPages\Garage\UserGarageViewModel.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_userCarsService" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="CarJournal.Pages.UserPages.CarPages.AddUserCar.AddUserCarViewModel">
+    <Position X="30.25" Y="4.25" Width="2.25" />
+    <Members>
+      <Field Name="_authenticationService" Hidden="true" />
+      <Field Name="_navigationManager" Hidden="true" />
+    </Members>
+    <TypeIdentifier>
+      <HashCode>AAYAIIAAAAAAAAACAAAQAAgAAAAAAgSAAAAAgAEAACA=</HashCode>
+      <FileName>Pages\UserPages\CarPages\AddUserCar\AddUserCarViewModel.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_userCarsService" />
+    </ShowAsAssociation>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Interface Name="CarJournal.Services.Client.ISelectedCarService">
+    <Position X="23.75" Y="16.5" Width="2" />
+    <Compartments>
+      <Compartment Name="Events" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAEQAAAAAAAAA=</HashCode>
+      <FileName>Services\Client\ISelectedCarService.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CarJournal.Services.ServiceRecords.IServiceRecordService">
+    <Position X="18.5" Y="8" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AABgAAAAAACAABAAAAAAAAAAAAAAAAAAAAAAAAAAIAA=</HashCode>
+      <FileName>Services\ServiceRecords\IServiceRecordService.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CarJournal.Services.Mileages.IMileageService">
+    <Position X="27" Y="8.75" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAAAAAAAAAAAQAAQAAAAAAAAAAACAIAAAAgIAA=</HashCode>
+      <FileName>Services\Mileages\IMileageService.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CarJournal.Services.UserCars.IUserCarsService">
+    <Position X="34.25" Y="4.25" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAIIAABAAAAAAAAAAAAAAAAAAABAAAAAAAAAKAA=</HashCode>
+      <FileName>Services\UserCars\IUserCarsService.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CarJournal.Services.Trackings.ITrackingService">
+    <Position X="26.5" Y="12.75" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAABAAAQACAACAAAJAEAAAAAAAAAAABAAAgAAAAIAA=</HashCode>
+      <FileName>Services\Trackings\ITrackingService.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="CarJournal.Services.ServiceCategories.IServiceCategoryService">
+    <Position X="21.5" Y="8.75" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAAAAAAAAAAAAAAAAAAAAAAAAQwAAAAAAAAIAA=</HashCode>
+      <FileName>Services\ServiceCategories\IServiceCategoryService.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+</ClassDiagram>

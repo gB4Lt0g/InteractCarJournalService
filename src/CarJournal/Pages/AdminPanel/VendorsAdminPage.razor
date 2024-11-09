@@ -1,0 +1,138 @@
+@page "/admin/vendors"
+@attribute [Authorize(Roles = "admin")]
+
+@using CarJournal.Domain
+@using System.Net.Http.Json
+@using CarJournal.Services.Vendors
+
+@inject IAdminVendorService _vendorService
+
+@if(_isCreating)
+{
+    <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Class="mb-4" OnClick="@CloseCreateMenu">Back</MudButton>
+
+    <MudTextField @bind-Value="VendorName" Label="Vendor Name" Variant="Variant.Outlined" />
+
+    <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Class="mb-4" OnClick="@CreateVendor">Create</MudButton>
+
+    <MudText Color="Color.Error">
+        @ErrorMessage
+    </MudText>
+}
+else
+{
+    <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Class="mb-4" OnClick="@OpenCreateMenu">Add new Vendor</MudButton>
+
+    <MudDataGrid T="Vendor" Items="@_vendors" Bordered="true" Dense="true" SortMode="@SortMode.Single" ReadOnly="@_readOnly"
+        EditMode="@(_isCellEditMode ? DataGridEditMode.Cell : DataGridEditMode.Form)"
+        StartedEditingItem="@StartedEditingItem" CanceledEditingItem="@CanceledEditingItem"
+        CommittedItemChanges="@CommittedItemChanges"
+        EditTrigger="@(_editTriggerRowClick ? DataGridEditTrigger.OnRowClick : DataGridEditTrigger.Manual)">
+
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Vendors</MudText>
+            <MudSpacer />
+            <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
+
+        <Columns>
+            <PropertyColumn Property="x => x.Id" Title="#" Editable="false" HeaderStyle="width: 5%;" />
+            <PropertyColumn Property="x => x.Name" Title="Name" FlexGrow="1" />
+            <TemplateColumn CellClass="d-flex justify-end" HeaderStyle="width: 5%;">
+                <CellTemplate>
+                    <MudStack Row>
+                        <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit"
+                            OnClick="@context.Actions.StartEditingItemAsync" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteRecord(@context.Item))" aria-label="delete" />
+                    </MudStack>
+                </CellTemplate>
+            </TemplateColumn>
+
+        </Columns>
+        <PagerContent>
+            <MudDataGridPager T="Vendor" />
+        </PagerContent>
+    </MudDataGrid>
+}
+
+@code {
+    private MudDataGrid<Vendor> _dataGrid = new MudDataGrid<Vendor>();
+
+    private List<Vendor> _vendors = new List<Vendor>();
+    // creating
+    private bool _isCreating = false;
+    private string VendorName { get; set; } = string.Empty;
+
+    private string ErrorMessage { get; set; } = string.Empty;
+
+    private async Task CreateVendor()
+    {
+        if(string.IsNullOrEmpty(VendorName) ||
+            VendorName.Length < 3)
+        {
+            ErrorMessage = "Must be 3 or more characters";
+            StateHasChanged();
+            return;
+        }
+
+        var result = await _vendorService.CreateVendor(VendorName);
+        _vendors.Add(new Vendor(result.Id, result.Name));
+
+        VendorName = string.Empty;
+        _isCreating = false;
+        ErrorMessage = "";
+    }
+
+    // editing
+    private bool _readOnly;
+    private bool _isCellEditMode;
+    private List<string> _events = new();
+    private bool _editTriggerRowClick;
+    private string TextValue { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _vendors = await _vendorService.GetAllAsync();
+    }
+
+    // events
+    void StartedEditingItem(Vendor item)
+    {
+        _events.Insert(0, $"Event = StartedEditingItem, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
+    }
+
+    void CanceledEditingItem(Vendor item)
+    {
+        _events.Insert(0, $"Event = CanceledEditingItem, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
+    }
+
+    void CommittedItemChanges(Vendor item)
+    {
+        _events.Insert(0, $"Event = CommittedItemChanges, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
+        _vendorService.UpdateAsync(item);
+    }
+
+    private Task OnSearch(string text)
+    {
+        TextValue = text;
+        return _dataGrid.ReloadServerData();
+    }
+
+    private void OpenCreateMenu()
+    {
+        _isCreating = true;
+    }
+
+    private void CloseCreateMenu()
+    {
+        _isCreating = false;
+    }
+
+    private void DeleteRecord(Vendor vendor)
+    {
+        _vendorService.DeleteVendor(vendor.Id);
+        _vendors.Remove(vendor);
+        StateHasChanged();
+    }
+}

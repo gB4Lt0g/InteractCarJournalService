@@ -1,0 +1,54 @@
+@page "/admin/servicecategories/create"
+@attribute [Authorize(Roles = "admin")]
+
+@using CarJournal.Services.ServiceCategories
+
+@inject IServiceCategoryService _categoriesService
+@inject NavigationManager _naviagationManager
+
+<MudButton Variant="Variant.Filled"
+    DropShadow="false"
+    Color="Color.Primary"
+    Class="mb-4"
+    OnClick="@ViewModel.NavigateBackToCategoriesList">
+    Back
+</MudButton>
+
+<MudTextField Style="max-width: 400px;"
+    @bind-Value="@ViewModel.CategoryName"
+    Label="Name"
+    Variant="Variant.Outlined" />
+
+<MudButton Variant="Variant.Filled"
+    DropShadow="false"
+    Color="Color.Primary"
+    Class="mb-4"
+    OnClick="CreateCategory">
+    Create
+</MudButton>
+
+<MudText Color="Color.Error">
+    @ErrorMessage
+</MudText>
+
+@code {
+    public CreateServiceCategoryViewModel ViewModel;
+
+    private string ErrorMessage { get; set; } = string.Empty;
+    protected override async Task OnInitializedAsync()
+    {
+        ViewModel = new CreateServiceCategoryViewModel(_categoriesService, _naviagationManager);
+    }
+
+    private async Task CreateCategory()
+    {
+        if(string.IsNullOrEmpty(ViewModel.CategoryName) || ViewModel.CategoryName.Length < 3)
+        {
+            ErrorMessage = "Must be 3 or more characters";
+            StateHasChanged();
+            return;
+        }
+
+        await ViewModel.CreateCategory();
+    }
+}

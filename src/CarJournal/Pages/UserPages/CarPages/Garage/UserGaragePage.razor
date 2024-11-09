@@ -1,0 +1,91 @@
+@page "/garage"
+@attribute [Authorize(Roles = "user")]
+
+@using CarJournal.Services.Authentication
+@using CarJournal.Services.UserCars
+
+@inject IClientAuthenticationService _authenticationService
+@inject IUserCarsService _userCarService
+@inject NavigationManager _navigationManager
+
+<MudStack AlignItems="AlignItems.Start"
+    Style="margin: 0px 10px;">
+    <MudButton
+            Variant="Variant.Outlined"
+            StartIcon="@Icons.Material.Filled.Add"
+            DropShadow="false"
+            Color="Color.Success" Class="mb-4"
+            OnClick="NavigateToAddCarInGarage">
+            Add new car
+        </MudButton>
+</MudStack>
+
+@foreach(var userCar in ViewModel.UserCars)
+{
+    <MudCard Style="margin: 10px; padding: 20px;">
+    <MudGrid>
+        <MudItem xs="3" md="3">
+            <MudText Typo="Typo.h6">@userCar.Name</MudText>
+
+            @{
+                var car = userCar?.Car;
+                if(car != null)
+                {
+                    <MudText Typo="Typo.h6">@car?.Vendor?.Name @car.Series @car.Model</MudText>
+                }
+            }
+
+            <MudText Class="mt-3" Typo="Typo.body1">Start mileage @userCar?.StartMileage</MudText>
+            <MudText Class="mt-3" Typo="Typo.body1">Current mileage @userCar?.CurrentMileage</MudText>
+            <MudText Class="mt-3" Typo="Typo.body1">Average Mileage @userCar?.AverageMileage KM</MudText>
+
+            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Start" Class="mt-3">
+                <MudButton Variant="@_variant"
+                    @onclick="() => NavigateToEdit(userCar.Id)"
+                    Color="Color.Primary" Class="mt-3">Details</MudButton>
+                <MudButton Variant="@_variant"
+                    @onclick="() => ViewModel.DeleteRecord(userCar.Id)"
+                    Color="Color.Warning"
+                    Class="mt-3">
+                    Delete
+                </MudButton>
+            </MudStack>
+        </MudItem>
+    </MudGrid>
+</MudCard>
+<MudDivider />
+}
+
+@code {
+    private Variant _variant = Variant.Outlined;
+
+    public UserGarageViewModel ViewModel { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        ViewModel = new UserGarageViewModel(
+            _userCarService,
+            _authenticationService,
+            _navigationManager
+        );
+
+        await Task.WhenAll(ViewModel.LoadCars());
+    }
+
+    bool _expanded = false;
+
+    private void OnExpandCollapseClick()
+    {
+        _expanded = !_expanded;
+    }
+
+    private void NavigateToEdit(int userCarId)
+    {
+        _navigationManager.NavigateTo($"/garage/edit/{userCarId}");
+    }
+
+    private void NavigateToAddCarInGarage()
+    {
+        _navigationManager.NavigateTo("/garage/addcar");
+    }
+}

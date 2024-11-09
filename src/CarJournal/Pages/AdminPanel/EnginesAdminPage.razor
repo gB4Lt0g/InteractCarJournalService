@@ -1,0 +1,153 @@
+@page "/admin/engines"
+@attribute [Authorize(Roles = "admin")]
+
+@using CarJournal.Domain
+@using System.Net.Http.Json
+@using CarJournal.Services.Engines
+
+@inject IEngineService _engineService
+
+@if(_isCreating)
+{
+    <MudButton Variant="Variant.Filled" 
+        DropShadow="false"
+        Color="Color.Primary"
+        Class="mb-4"
+        OnClick="@CloseCreateMenu">Back</MudButton>
+
+    <MudTextField @bind-Value="EngineModel" Label="Model" Variant="Variant.Outlined" />
+    <MudTextField @bind-Value="EngineSize" Label="Engine Size" Variant="Variant.Outlined" />
+
+    <MudButton Variant="Variant.Filled"
+        DropShadow="false"
+        Color="Color.Primary"
+        Class="mb-4"
+        OnClick="@CreateEngine">
+        Create
+    </MudButton>
+
+    <MudText Color="Color.Error">
+        @ErrorMessage
+    </MudText>
+}
+else
+{
+    <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Class="mb-4" OnClick="@OpenCreateMenu">Add new Engine</MudButton>
+
+    <MudDataGrid T="Engine" Items="@_engines"
+        Bordered="true" Dense="true" SortMode="@SortMode.Single" ReadOnly="@_readOnly"
+        EditMode="@(_isCellEditMode ? DataGridEditMode.Cell : DataGridEditMode.Form)"
+        StartedEditingItem="@StartedEditingItem" CanceledEditingItem="@CanceledEditingItem"
+        CommittedItemChanges="@CommittedItemChanges"
+        EditTrigger="@(_editTriggerRowClick ? DataGridEditTrigger.OnRowClick : DataGridEditTrigger.Manual)">
+
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Engines</MudText>
+            <MudSpacer />
+            <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
+
+        <Columns>
+            <PropertyColumn Property="x => x.Id" Title="#" Editable="false" HeaderStyle="width: 5%;" />
+            <PropertyColumn Property="x => x.Model" Title="Model" FlexGrow="1" />
+            <PropertyColumn Property="x => x.EngineSize" Title="Size"/>
+            <TemplateColumn CellClass="d-flex justify-end" HeaderStyle="width: 5%;">
+                <CellTemplate>
+                    <MudStack Row>
+                        <MudIconButton Icon="@Icons.Material.Outlined.Edit"
+                            OnClick="@context.Actions.StartEditingItemAsync" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteRecord(@context.Item))" aria-label="delete" />
+                    </MudStack>
+                </CellTemplate>
+            </TemplateColumn>
+
+        </Columns>
+        <PagerContent>
+            <MudDataGridPager T="Engine" />
+        </PagerContent>
+    </MudDataGrid>
+}
+
+@code {
+    private MudDataGrid<Engine> _dataGrid = new MudDataGrid<Engine>();
+
+    private List<Engine> _engines = new List<Engine>();
+    // creating
+    private bool _isCreating = false;
+    private string EngineModel { get; set; } = string.Empty;
+    private float EngineSize { get; set; }
+
+    private string ErrorMessage { get; set; } = string.Empty;
+
+    private async Task CreateEngine()
+    {
+        if(string.IsNullOrEmpty(EngineModel) ||
+            EngineModel.Length < 3)
+        {
+            ErrorMessage = "Must be 3 or more characters";
+            StateHasChanged();
+            return;
+        }
+
+        await _engineService.Add(EngineModel, EngineSize);
+        _engines = await _engineService.GetAllAsync();
+
+        EngineModel = string.Empty;
+
+        _isCreating = false;
+
+    }
+
+    // editing
+    private bool _readOnly;
+    private bool _isCellEditMode;
+    private List<string> _events = new();
+    private bool _editTriggerRowClick;
+    private string TextValue { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _engines = await _engineService.GetAllAsync();
+    }
+
+    // events
+    void StartedEditingItem(Engine item)
+    {
+        _events.Insert(0, $"Event = StartedEditingItem, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
+    }
+
+    void CanceledEditingItem(Engine item)
+    {
+        _events.Insert(0, $"Event = CanceledEditingItem, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
+    }
+
+    void CommittedItemChanges(Engine item)
+    {
+        _events.Insert(0, $"Event = CommittedItemChanges, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
+        _engineService.Update(item.Id, item.Model, item.EngineSize);
+    }
+
+    private Task OnSearch(string text)
+    {
+        TextValue = text;
+        return _dataGrid.ReloadServerData();
+    }
+
+    private void OpenCreateMenu()
+    {
+        _isCreating = true;
+    }
+
+    private void CloseCreateMenu()
+    {
+        _isCreating = false;
+    }
+    
+    private void DeleteRecord(Engine engine)
+    {
+        _engineService.Remove(engine.Id);
+        _engines.Remove(engine);
+        StateHasChanged();
+    }
+}

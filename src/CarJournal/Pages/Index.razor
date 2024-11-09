@@ -1,0 +1,9 @@
+﻿@page "/"
+
+@using CarJournal.Pages.UserPages.CarPages.Garage
+
+<AuthorizeView Roles="user">
+    <Authorized>
+        <UserGaragePage/>
+    </Authorized>
+</AuthorizeView>

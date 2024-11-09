@@ -1,0 +1,211 @@
+@page "/services"
+@page "/services/category/{categoryId:int?}"
+
+@attribute [Authorize(Roles = "user")]
+
+@inject IMileageService _mileageService
+@inject IServiceCategoryService _categoriesService
+@inject ISelectedCarService _selectedCarService
+@inject IServiceRecordService _servicesService
+@inject NavigationManager _naviagationManager
+@inject ProtectedSessionStorage _protectedSessionStorage
+@inject IDialogService _dialogService
+
+<MudButton Variant="Variant.Outlined"
+    DropShadow="false"
+    Color="Color.Success"
+    Class="mb-4"
+    StartIcon="@Icons.Material.Filled.Add"
+    OnClick="AddService"
+    Style="margin: 0px 10px;">
+    Add new Record
+</MudButton>
+
+@foreach(var service in ViewModel.ServiceRecords)
+{
+<MudCard Style="margin: 10px; padding: 20px;">
+    <MudGrid>
+        <MudItem xs="3" md="3">
+            <MudText Typo="Typo.h6">@service.Title</MudText>
+            <MudText Typo="Typo.h6">@service.DateOfService</MudText>
+            <MudText Typo="Typo.body1">@service?.ServiceCategory?.Name</MudText>
+            <MudStack Row="false" Spacing="1" AlignItems="AlignItems.Start" Class="mt-3">
+                <MudStack Row="true">
+                    <MudIcon Icon="@Icons.Material.Outlined.Numbers" />
+                    <MudText Typo="Typo.body2">Service Mileage - @service.Mileage KM</MudText>
+                </MudStack>
+                <MudStack Row="true">
+                    <MudIcon Icon="@Icons.Material.Outlined.Money" />
+                    <MudText Typo="Typo.body2">Price - @service.Price</MudText>
+                </MudStack>
+            </MudStack>
+            <MudText Typo="Typo.body1" Class="mt-3 mb-3">
+                @service.Description
+            </MudText>
+            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Start" Class="mt-3">
+                <MudButton Variant="@_variant"
+                    Color="Color.Primary"
+                    Class="mt-3"
+                    @onclick="() => EditService(service.Id)">Details</MudButton>
+                <MudButton Variant="@_variant" 
+                    @onclick="() => DeleteService(service)" Color="Color.Warning" Class="mt-3">Delete</MudButton>
+            </MudStack>
+        </MudItem>
+    </MudGrid>
+</MudCard>
+<MudDivider />
+}
+
+@code {
+    [Parameter]
+    public int? CategoryId { get; set; }
+
+    private ServiceRecordsListViewModel ViewModel { get; set; }
+    private Variant _variant = Variant.Outlined;
+    private bool _readOnly;
+    private bool _isCellEditMode;
+    private bool _editTriggerRowClick;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _selectedCarService.SelectedCarChangedAsync += OnSelectedCarChangedAsync;
+
+        ViewModel = new ServiceRecordsListViewModel(
+            _servicesService,
+            _selectedCarService,
+            _naviagationManager);
+
+        await ViewModel.InitializeAsync(CategoryId);
+        StateHasChanged();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await ViewModel.InitializeAsync(CategoryId);
+        StateHasChanged();
+    }
+
+    private async Task EditService(int serviceId)
+    {
+        var serviceToEdit = await _servicesService.GetByIdAsync(serviceId);
+
+        if(serviceToEdit == null)
+        {
+            return;
+        }
+
+        var trackingService = new AddServiceDto()
+        {
+            Title = serviceToEdit.Title,
+            Mileage = serviceToEdit.Mileage,
+            UserCarId = serviceToEdit.UserCarId,
+            DateOfService = serviceToEdit.DateOfService,
+            Description = serviceToEdit.Description,
+            Price = serviceToEdit.Price,
+            ServiceCategory = serviceToEdit.ServiceCategory
+        };
+
+        var parameters = new DialogParameters()
+        {
+            {
+                nameof(AddService_Dialog.TrackingService),
+                trackingService
+            }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+        };
+
+        var dialog = await _dialogService
+            .ShowAsync<AddService_Dialog>(
+            "Details Service",
+            parameters,
+            options
+        );
+
+        var dialogResult = await dialog.Result;
+        if (dialogResult != null && !dialogResult.Canceled)
+        {
+            if (dialogResult.Data is AddServiceDto model)
+            {
+                await ViewModel.UpdateService(serviceId, model);
+                ViewModel.NavigateBackToServicesList();
+            }
+        }
+    }
+
+    private async Task DeleteService(ServiceRecord service)
+    {
+        var parameters = new DialogParameters<Delete_Dialog>
+        {
+            { x => x.ContentText, "Do you really want to delete these records? This process cannot be undone." },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error },
+        };
+
+        var options = new DialogOptions()
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.ExtraSmall
+        };
+
+        var dialog = await _dialogService.ShowAsync<Delete_Dialog>($"Delete {service.Title}?", parameters, options);
+        var result = await dialog.Result;
+
+        if(result != null && !result.Canceled)
+        {
+            await ViewModel.DeleteServiceAsync(service.Id);
+            ViewModel.NavigateBackToServicesList();
+        }
+    }
+
+    private async Task AddService()
+    {
+        var selectedCar = await _selectedCarService.GetSelectedCar();
+        var mileage = (await _mileageService.GetLastMileage(selectedCar.Id));
+
+        var trackingService = new AddServiceDto()
+        {
+            Mileage = mileage != null ? mileage.Mileage : 0,
+            UserCarId = selectedCar.Id
+        };
+
+        var parameters = new DialogParameters()
+        {
+            {
+                nameof(AddService_Dialog.TrackingService),
+                trackingService
+            }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+        };
+
+        var dialog = await _dialogService
+            .ShowAsync<AddService_Dialog>(
+            "Add Service",
+            parameters,
+            options
+        );
+
+        var dialogResult = await dialog.Result;
+        if (dialogResult != null && !dialogResult.Canceled)
+        {
+            if (dialogResult.Data is AddServiceDto model)
+            {
+                await ViewModel.CreateRecord(model);
+                ViewModel.NavigateBackToServicesList();
+            }
+        }
+    }
+
+    private async Task OnSelectedCarChangedAsync(SelectedCarData selectedCar)
+    {
+        await ViewModel.InitializeAsync(CategoryId);
+        StateHasChanged();
+    }
+}

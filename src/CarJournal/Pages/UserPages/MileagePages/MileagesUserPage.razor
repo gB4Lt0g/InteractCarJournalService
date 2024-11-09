@@ -1,0 +1,124 @@
+@page "/mileages"
+@attribute [Authorize(Roles = "user")]
+
+@using CarJournal.Services.Client
+@using CarJournal.Services.Mileages
+@using CarJournal.Services.Trackings
+@using CarJournal.Services.UserCars
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+
+@inject IMileageService _mileageService
+@inject ISelectedCarService _selectedCarService
+@inject IUserCarsService _userCarService
+@inject ITrackingService _trackingService
+@inject ProtectedSessionStorage _protectedSessionStorage
+@inject IDialogService _dialogService
+@inject ISnackbar _snackbar
+
+<MudStack Style="max-width: 300px; margin: 0px 10px;" Row="true" AlignItems="AlignItems.Start"
+    >
+    <MudTextField
+        @bind-Value="ViewModel.MileageToAdd"
+        Label="Value in KM"
+        Variant="Variant.Outlined"
+        />
+    <MudButton Variant="Variant.Outlined"
+               Color="Color.Warning"
+               Class="mt-3" 
+        @onclick="UpdateMileage">
+        Update
+    </MudButton>
+</MudStack>
+
+@foreach(var mileage in ViewModel.MileageRecords)
+{
+<MudCard Style="margin: 10px; padding: 20px;">
+    <MudItem xs="3" md="3">
+        <MudText Typo="Typo.h5">@mileage.Mileage KM</MudText>
+        <MudText Typo="Typo.body1" Class="mt-3 mb-3">
+            Last update @mileage.UpdatedAt.ToLocalTime()
+        </MudText>
+        @if(mileage.Id != ViewModel.LastMileage.Id)
+        {
+        <MudButton Variant="Variant.Outlined" Color="Color.Warning" Class="mt-3"
+            @onclick="() => DeleteRecord(mileage.Id)">
+            Delete
+        </MudButton>
+        }
+    </MudItem>
+</MudCard>
+<MudDivider />
+}
+
+@code {
+    private MileageViewModel ViewModel { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _selectedCarService.SelectedCarChangedAsync += OnSelectedCarChangedAsync;
+        ViewModel = new MileageViewModel(
+            _mileageService,
+            _selectedCarService,
+            _userCarService,
+            _trackingService);
+        await ViewModel.LoadMileages();
+    }
+
+    private async Task OnSelectedCarChangedAsync(SelectedCarData selectedCar)
+    {
+        await ViewModel.LoadMileages();
+        StateHasChanged();
+    }
+
+    private async Task UpdateMileage()
+    {
+        var selectedCar = await _selectedCarService.GetSelectedCar();
+        var validateData = await _mileageService
+            .ValidateNewMileage(ViewModel.MileageToAdd, selectedCar.Id);
+
+        if(validateData.IsValid)
+        {
+            await ViewModel.UpdateMileage();
+            StateHasChanged();
+
+            var trackings = await _trackingService.GetTrackingsReachedLimit(selectedCar.Id);
+
+            if(trackings.Count > 0)
+                _snackbar.Add("You have trackings that has reached limit!", Severity.Success);
+        }
+        else
+        {
+            var parameters = new DialogParameters<Delete_Dialog>
+            {
+                { x => x.ContentText, validateData.ErrorMessage},
+                { x => x.ButtonText, "Ok" },
+                { x => x.Color, Color.Error },
+            };
+
+            var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+            var dialog = await _dialogService.ShowAsync<Delete_Dialog>("Update error", parameters, options);
+            var result = await dialog.Result;
+        }
+    }
+
+    private async Task DeleteRecord(int mileageRecordId)
+    {
+        var parameters = new DialogParameters<Delete_Dialog>
+        {
+            { x => x.ContentText, "Do you really want to delete these records? This process cannot be undone." },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error },
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        var dialog = await _dialogService.ShowAsync<Delete_Dialog>("Delete", parameters, options);
+        var result = await dialog.Result;
+
+        if(result != null && !result.Canceled)
+        {
+            await ViewModel.DeleteMileage(mileageRecordId);
+        }
+    }
+}

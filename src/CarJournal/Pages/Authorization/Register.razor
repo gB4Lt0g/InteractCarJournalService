@@ -1,0 +1,71 @@
+@page "/register"
+
+@using CarJournal.Api.Authentication
+@using CarJournal.ClientDtos
+@using CarJournal.Services.Authentication
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject IAuthenticationService _authenticationService
+@inject AuthenticationStateProvider _authenticationStateProvider
+@inject IClientAuthenticationService _clientAuthenticationService
+@inject NavigationManager _navigationManager
+
+<EditForm Model="@_registerRequest" OnValidSubmit="OnValidSubmit" >
+<DataAnnotationsValidator/>
+<MudStack>
+    <MudItem xs="12" sm="7">
+        <MudCard>
+            <MudCardContent>
+                <MudTextField Label="Email" Class="mt-3"
+                              @bind-Value="_registerRequest.Email" For="@(() => _registerRequest.Email)" InputType="InputType.Email"/>
+                <MudTextField Label="Password" HelperText="Choose a strong password" Class="mt-3"
+                              @bind-Value="_registerRequest.Password" For="@(() => _registerRequest.Password)" InputType="InputType.Password"/>
+                <MudTextField Label="Confirm Password" HelperText="Choose a strong password" Class="mt-3"
+                              @bind-Value="_registerRequest.ConfirmPassword" For="@(() => _registerRequest.ConfirmPassword)" InputType="InputType.Password"/>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton ButtonType="ButtonType.Submit"
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    Class="ml-auto">
+                    Register
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+</MudStack>
+</EditForm>
+
+@code {
+    bool success;
+    private RegisterDto _registerRequest = new RegisterDto();
+    private string _messageInfo = "";
+    string[] errors = { };
+
+    private async Task OnValidSubmit(EditContext context)
+    {
+        success = true;
+        StateHasChanged();
+
+        await OnRegisterClicked();
+    }
+
+    private async Task OnRegisterClicked()
+    {
+        if(success == false)
+            return;
+
+        try
+        {
+            var authenticationResult = await _authenticationService.Register(_registerRequest.Email, _registerRequest.Password);
+            await _clientAuthenticationService.UpdateSessionStorage(authenticationResult.Token);
+
+            _navigationManager.NavigateTo("/");
+            _navigationManager.Refresh();
+        }
+        catch (Exception e)
+        {
+            _messageInfo = "error: " + e.Message;
+        }
+    }
+}

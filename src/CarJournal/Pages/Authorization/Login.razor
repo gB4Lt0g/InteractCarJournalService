@@ -1,0 +1,76 @@
+@page "/login"
+
+@using CarJournal.Api.Authentication
+@using CarJournal.ClientDtos
+@using CarJournal.Services.Authentication
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.ComponentModel.DataAnnotations
+
+@inject IAuthenticationService _authenticationService
+@inject AuthenticationStateProvider _authenticationStateProvider
+@inject IClientAuthenticationService _clientAuthenticationService
+@inject NavigationManager _navigationManager
+
+<EditForm Model="@_loginDto" OnValidSubmit="OnValidSubmit" >
+<DataAnnotationsValidator/>
+<MudStack>
+    <MudItem xs="12" sm="7">
+        <MudCard>
+            <MudCardContent>
+                <MudTextField Label="Email" Class="mt-3"
+                              @bind-Value="_loginDto.Email" For="@(() => _loginDto.Email)" InputType="InputType.Text"/>
+                <MudTextField Label="Password" HelperText="Enter a strong password" Class="mt-3"
+                              @bind-Value="_loginDto.Password" For="@(() => _loginDto.Password)" InputType="InputType.Password"/>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton ButtonType="ButtonType.Submit" OnClick="OnLoginClicked" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Login</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+
+    @if(!success)
+    {
+    <MudItem xs="12" sm="5">
+        <MudPaper Class="pa-4 mud-height-full">
+            <MudText Color="@Color.Error">
+                @_errorMessage
+            </MudText>
+        </MudPaper>
+    </MudItem>
+    }
+</MudStack>
+</EditForm>
+
+@code {
+    private bool success = true;
+    private LoginDto _loginDto = new LoginDto();
+    private string _errorMessage = "";
+
+    private async Task OnLoginClicked()
+    {
+        await _clientAuthenticationService.ClearSessionStorage();
+        AuthenticationResult authenticationResult;
+
+        try
+        {
+            authenticationResult = await _authenticationService.Login(_loginDto.Email, _loginDto.Password);
+        }
+        catch(Exception ex)
+        {
+            success = false;
+            _errorMessage = ex.Message;
+            StateHasChanged();
+            return;
+        }
+
+        await _clientAuthenticationService.UpdateSessionStorage(authenticationResult.Token);
+        _navigationManager.NavigateTo("/");
+        _navigationManager.Refresh();
+    }
+
+    private void OnValidSubmit(EditContext context)
+    {
+        success = true;
+        StateHasChanged();
+    }
+}

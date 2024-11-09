@@ -1,0 +1,181 @@
+@page "/garage/edit/{userCarId:int}"
+@attribute [Authorize(Roles = "user")]
+
+@using AutoMapper
+
+@inject IClientAuthenticationService _authenticationService
+@inject IUserCarsService _userCarService
+@inject ICarService _carService;
+@inject NavigationManager _navigationManager;
+@inject IMapper _mapper
+@inject IAdminVendorService _vendorService
+
+<MudStack>
+    <MudStack Style="width: 400px; margin: 0 10px;" Row="true" StretchItems="StretchItems.None">
+        <MudButton
+            Variant="Variant.Outlined"
+            StartIcon="@Icons.Material.Filled.ArrowBack"
+            DropShadow="false"
+            Color="Color.Primary" Class="mt-3"
+            OnClick="NavigateToGarage">
+            Garage
+        </MudButton>
+        <MudButton
+            Variant="Variant.Outlined"
+            StartIcon="@Icons.Material.Filled.Save"
+            DropShadow="false"
+            Color="Color.Success" Class="mt-3"
+            OnClick="ViewModel.UpdateCar">
+            Save
+        </MudButton>
+    </MudStack>
+    <MudStack Style="width: 400px; margin: 0 10px;">
+        <MudTextField @bind-Value="ViewModel.UserCarDto.Name" Label="Own car name" Variant="@_variant"/>
+        <MudTextField @bind-Value="ViewModel.UserCarDto.StartMileage"
+            ReadOnly="true"
+            Label="Current mileage" Variant="@_variant"/>
+        <MudTextField @bind-Value="ViewModel.UserCarDto.AverageMileage"
+            ReadOnly="true"
+            Label="Own car name" Variant="@_variant"/>
+    </MudStack>
+    <MudDivider />
+    <MudStack Style="width: 400px; margin: 0 10px;" >
+        <MudAlert Severity="Severity.Info">Binding a car is optional feature</MudAlert>
+        @if(SelectedCar == null)
+        {
+            <MudText>
+                <b>Car is not binding</b>
+            </MudText>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Success">
+                @SelectedCar?.Vendor?.Name @SelectedCar?.Model @SelectedCar?.Year
+            </MudAlert>
+            <MudButton Variant="@_variant" @onclick="ClearBindedCar">
+                Clear
+            </MudButton>
+        }
+        @* <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Class="mb-4">
+            Bind car
+        </MudButton> *@
+    </MudStack>
+</MudStack>
+
+
+<MudStack Direction="Row" Spacing="2">
+    <MudButton OnClick="OnExpandCollapseClick">@(_expanded ? "Collapse Filters" : "Expand Filters")</MudButton>
+        <MudDivider />
+     <MudCollapse Expanded="_expanded">
+        <MudAutocomplete T="Vendor" Label="Vendor"
+            SearchFunc="@SearchCarViewModel.SearchVendor"
+            ValueChanged="SearchCarViewModel.SelectVendor"
+            ToStringFunc="@(e=> e==null?null : $"{e.Name}")"
+            Variant="@_variant" />
+
+        <MudAutocomplete T="string" Label="Series"
+            SearchFunc="@SearchCarViewModel.SearchSeries"
+            ValueChanged="SearchCarViewModel.SelectSeries"
+            Variant="@_variant" />
+
+        <MudAutocomplete T="string" Label="Year"
+            SearchFunc="@SearchCarViewModel.SearchYears"
+            ValueChanged="SearchCarViewModel.SelectYear"
+            Variant="@_variant" />
+     </MudCollapse>
+</MudStack>
+
+@foreach(var car in SearchCarViewModel.Cars)
+{
+    <MudCard Style="margin: 10px 10px; padding: 20px;">
+    <MudGrid>
+        <MudItem xs="12" md="6">
+            <MudText Typo="Typo.h6">@car?.Vendor?.Name @car?.Series @car?.Model</MudText>
+            <MudText Typo="Typo.h6">@car.Year year</MudText>
+            <MudText Typo="Typo.body2">Engine Size @car?.Engine?.EngineSize л.</MudText>
+            <MudText Typo="Typo.body2">Body Type @car?.BodyType?.Name</MudText>
+            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Start" Class="mt-3">
+                <MudIcon Icon="@Icons.Material.Outlined.LocalGasStation" />
+                <MudText Typo="Typo.body2">@car?.FuelType?.Name</MudText>
+            </MudStack>
+            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Start" Class="mt-3">
+                <MudIcon Icon="@Icons.Material.Outlined.Settings"/>
+                <MudText Typo="Typo.body2">@car?.Gearbox?.Name</MudText>
+            </MudStack>
+
+            <MudDivider Style="max-width: 200px;margin: 10px 0px 10px 0px;"/>
+            @if (SelectedCar != null && SelectedCar.Id == car.Id)
+            {
+                <MudAlert Severity="Severity.Success">
+                    Binded
+                </MudAlert>
+            }
+            else
+            {
+                <MudButton Variant="@_variant" Color="Color.Primary"
+                    @onclick="() => SelectCar(car)">
+                    Bind
+                </MudButton>
+            }
+        </MudItem>
+    </MudGrid>
+</MudCard>
+<MudDivider />
+}
+
+@code {
+    private Variant _variant = Variant.Outlined;
+
+    [Parameter]
+    public int UserCarId { get; set; }
+
+    bool _expanded = false;
+
+    private void OnExpandCollapseClick() {
+        _expanded = !_expanded;
+    }
+    private EditUserCarViewModel ViewModel { get; set; }
+    private SearchCarsViewModel SearchCarViewModel { get; set; }
+
+    private Car? SelectedCar
+    {
+        get => ViewModel.UserCarDto.Car;
+        set => ViewModel.UserCarDto.Car = value;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        ViewModel = new EditUserCarViewModel(
+            _userCarService,
+            _authenticationService,
+            _mapper,
+            _navigationManager
+        );
+
+        SearchCarViewModel = new SearchCarsViewModel(_carService, _vendorService);
+        await SearchCarViewModel.InitializeAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await ViewModel.InitializeAsync(UserCarId);
+        StateHasChanged();
+    }
+
+    private void NavigateToGarage()
+    {
+        _navigationManager.NavigateTo("/garage");
+    }
+
+    private void SelectCar(Car car)
+    {
+        SelectedCar = car;
+        StateHasChanged();
+    }
+
+    private void ClearBindedCar()
+    {
+        SelectedCar = null;
+        StateHasChanged();
+    }
+}

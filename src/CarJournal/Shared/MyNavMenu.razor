@@ -1,0 +1,45 @@
+@using CarJournal.Services.ServiceCategories
+
+@inject IServiceCategoryService _serviceCategoryService
+
+<MudNavMenu>
+    <AuthorizeView Roles="user">
+        <Authorized>
+            <MudNavLink Href="/garage" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Garage">Garage</MudNavLink>
+            <MudNavGroup Title="Service Journal" Icon="@Icons.Material.Filled.BuildCircle">
+                <MudNavLink Href="/services" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.BuildCircle">All</MudNavLink>
+                @foreach(var category in _serviceCategories)
+                {
+                   <MudNavLink Href="@($"/services/category/{category.Id}")" Match="NavLinkMatch.All">@category.Name</MudNavLink>
+                }
+            </MudNavGroup>
+            <MudNavLink Href="/mileages" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled._60fps">Mileages</MudNavLink>
+            <MudNavLink Href="/trackings" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.TrackChanges">Trackings</MudNavLink>
+            <MudNavLink Href="/cars/search" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Search">Search Cars</MudNavLink>
+        </Authorized>
+    </AuthorizeView>
+    <AuthorizeView Roles="admin">
+        <Authorized>
+            <MudNavGroup Title="Administrating" Expanded="true">
+                <MudNavGroup Title="Car Components" Expanded="true">
+                    <MudNavLink Href="/admin/vendors" Match="NavLinkMatch.Prefix">Vendors</MudNavLink>
+                    <MudNavLink Href="/admin/engines" Match="NavLinkMatch.Prefix">Engines</MudNavLink>
+                    <MudNavLink Href="/admin/gearboxes" Match="NavLinkMatch.Prefix">Gearboxes</MudNavLink>
+                    <MudNavLink Href="/admin/fueltypes" Match="NavLinkMatch.Prefix">Fuel Types</MudNavLink>
+                    <MudNavLink Href="/admin/bodytypes" Match="NavLinkMatch.Prefix">Body Types</MudNavLink>
+                </MudNavGroup>
+                <MudNavLink Href="/admin/cars" Match="NavLinkMatch.Prefix">Cars</MudNavLink>
+                <MudNavLink Href="/admin/servicecategories" Match="NavLinkMatch.Prefix">Service Categories</MudNavLink>
+            </MudNavGroup>
+        </Authorized>
+    </AuthorizeView>
+</MudNavMenu>
+
+@code {
+    private List<ServiceCategory> _serviceCategories = new List<ServiceCategory>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _serviceCategories = await _serviceCategoryService.GetAllAsync();
+    }
+}
